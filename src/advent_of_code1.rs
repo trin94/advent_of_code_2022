@@ -61,10 +61,19 @@ pub fn solve() {
     let file = "resources/day_1_puzzle_1_input.txt";
 
     let lines = files::parse_lines_from(file);
-    let elves = problem::parse_elves_from(lines);
+    let mut elves = problem::parse_elves_from(lines);
 
-    let calories = elves.iter().map(|x| x.calories()).max().unwrap();
-    println!("Elve with most food {}", calories)
+    elves.sort_by(|a, b| a.calories().cmp(&b.calories()));
 
+    let calories = elves.last().unwrap().calories();
+    println!("Elve with most food {}", calories);
+
+    let elve3 = elves.pop().unwrap();
+    let elve2 = elves.pop().unwrap();
+    let elve1 = elves.pop().unwrap();
+
+    let sum = elve1.calories() + elve2.calories() + elve3.calories();
+
+    println!("Sum of those three elves: {}", sum)
 }
 
