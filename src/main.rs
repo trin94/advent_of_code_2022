@@ -1,7 +1,7 @@
-mod day01;
 mod files;
+mod day02;
 
 fn main() {
-    println!("Advent of Code: 1");
-    day01::solve()
+    println!("Advent of Code 2022");
+    day02::solve()
 }
