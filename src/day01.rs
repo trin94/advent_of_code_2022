@@ -24,14 +24,13 @@ mod files {
 }
 
 mod problem {
-
-    pub struct Elve {
+    pub struct Elf {
         calories: Vec<u32>,
     }
 
-    impl Elve {
+    impl Elf {
         pub fn new() -> Self {
-            Elve { calories: Vec::new() }
+            Elf { calories: Vec::new() }
         }
 
         pub fn calories(&self) -> u32 {
@@ -39,16 +38,16 @@ mod problem {
         }
     }
 
-    pub fn parse_elves_from(lines: Vec<String>) -> Vec<Elve> {
+    pub fn parse_elves_from(lines: Vec<String>) -> Vec<Elf> {
         let mut elves = Vec::new();
-        let mut current_elve = Elve::new();
+        let mut current = Elf::new();
         for line in lines {
             if line.is_empty() {
-                elves.push(current_elve);
-                current_elve = Elve::new();
+                elves.push(current);
+                current = Elf::new();
             } else {
                 let food = line.parse::<u32>().unwrap();
-                current_elve.calories.push(food)
+                current.calories.push(food)
             }
         }
         return elves;
@@ -56,9 +55,8 @@ mod problem {
 }
 
 
-
 pub fn solve() {
-    let file = "resources/day_1_puzzle_1_input.txt";
+    let file = "resources/day01.txt";
 
     let lines = files::parse_lines_from(file);
     let mut elves = problem::parse_elves_from(lines);
@@ -66,14 +64,14 @@ pub fn solve() {
     elves.sort_by(|a, b| a.calories().cmp(&b.calories()));
 
     let calories = elves.last().unwrap().calories();
-    println!("Elve with most food {}", calories);
+    println!("Fattest 1 elf:   {} calories", calories);
 
-    let elve3 = elves.pop().unwrap();
-    let elve2 = elves.pop().unwrap();
-    let elve1 = elves.pop().unwrap();
+    let elf3 = elves.pop().unwrap();
+    let elf2 = elves.pop().unwrap();
+    let elf1 = elves.pop().unwrap();
 
-    let sum = elve1.calories() + elve2.calories() + elve3.calories();
+    let sum = elf1.calories() + elf2.calories() + elf3.calories();
 
-    println!("Sum of those three elves: {}", sum)
+    println!("Fattest 3 elves: {} calories", sum)
 }
 
