@@ -14,14 +14,14 @@ pub fn priority_of(char: char) -> u32 {
     }
 }
 
-pub fn find_same_char(first: &str, last: &str) -> char {
-    let first_chars = first.chars();
-    for f in first_chars {
-        for l in last.chars() {
-            if f == l { return f; }
-        }
+pub fn find_same_char_from(strings: Vec<String>) -> char {
+    let mut vec = strings.clone();
+    let (intersection, others) = vec.split_at_mut(1);
+    let intersection = &mut intersection[0];
+    for other in others {
+        intersection.retain(|e| other.contains(e));
     }
-    panic!("Could not find same char in '{}' and '{}'", first, last)
+    intersection.pop().unwrap()
 }
 
 pub fn solve() {
@@ -31,12 +31,23 @@ pub fn solve() {
     let sum: u32 = lines.iter()
         .map(|line| {
             let compartment = line.split_at(line.len() / 2);
-            let first = compartment.0;
-            let last = compartment.1;
-            let same_char = find_same_char(first, last);
+            let mut strings = Vec::new();
+            strings.push(compartment.0.to_string());
+            strings.push(compartment.1.to_string());
+            let same_char = find_same_char_from(strings);
             priority_of(same_char)
         })
         .sum();
 
-    println!("Sum of the priorities: {}", sum)
+    println!("Sum of priorities: {}", sum);
+
+    let chunks: Vec<&[String]> = lines.chunks(3).collect();
+
+    let sum: u32 = chunks.into_iter().map(|chunk| {
+        let strings = chunk.iter().map(|element| element.clone()).collect();
+        let same_char = find_same_char_from(strings);
+        priority_of(same_char)
+    }).sum();
+
+    println!("Sum of priorities: {}", sum);
 }
