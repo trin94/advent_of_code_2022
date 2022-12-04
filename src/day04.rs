@@ -1,3 +1,5 @@
+use std::os::unix::raw::off_t;
+
 use crate::files;
 
 struct Range {
@@ -16,6 +18,10 @@ impl Range {
     pub fn fully_includes(&self, other: &Range) -> bool {
         other.lower >= self.lower && other.upper <= self.upper
     }
+
+    pub fn overlap(&self, other: &Range) -> bool {
+        self.lower >= other.lower && self.lower <= other.upper
+    }
 }
 
 pub fn solve() {
@@ -33,12 +39,20 @@ pub fn solve() {
             (first, last)
         }).collect::<Vec<(Range, Range)>>();
 
-    let count = ranges
+    let contain = ranges
         .iter()
         .filter(|(first, last)| {
             first.fully_includes(last) || last.fully_includes(first)
         })
         .count();
 
-    println!("Fully contain the other: {}", count)
+    println!("Fully contain the other: {}", contain);
+
+    let overlap = ranges.iter()
+        .filter(|(first, last)| {
+            first.overlap(last) || last.overlap(first)
+        })
+        .count();
+
+    println!("Overlap each other: {}", overlap)
 }
