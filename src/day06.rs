@@ -21,7 +21,7 @@ impl MarkerDetector {
         self.position += 1;
     }
 
-    pub fn marker_found(&mut self) -> bool {
+    pub fn marker_found(&self) -> bool {
         let mut uniques = HashSet::new();
         let mut elements = self.elements.clone();
         elements.retain(|e| uniques.insert(*e));
