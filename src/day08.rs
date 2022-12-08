@@ -19,14 +19,6 @@ impl Grid {
         Grid { size, elements }
     }
 
-    pub fn rows(&self) -> usize {
-        self.size
-    }
-
-    pub fn column(&self) -> usize {
-        self.size
-    }
-
     pub fn can_view_border(&self, x: usize, y: usize) -> bool {
         self.can_view_left_border(x, y) ||
             self.can_view_right_border(x, y) ||
@@ -159,8 +151,8 @@ pub fn solve() {
     let grid = Grid::new(lines);
 
     let mut sum = 0;
-    for x in 0..(grid.rows()) {
-        for y in 0..(grid.column()) {
+    for x in 0..grid.size {
+        for y in 0..grid.size {
             if grid.can_view_border(x, y) {
                 sum += 1;
             }
@@ -170,8 +162,8 @@ pub fn solve() {
     println!("Visible outside: {}", sum);
 
     let mut scenic = 0;
-    for x in 0..(grid.rows()) {
-        for y in 0..(grid.column()) {
+    for x in 0..grid.size {
+        for y in 0..grid.size {
             let new_scenic = grid.scenic_score_of(x, y);
             if new_scenic > scenic {
                 scenic = new_scenic;
