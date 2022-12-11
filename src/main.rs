@@ -1,6 +1,6 @@
 mod files;
-mod day10;
+mod day11;
 
 fn main() {
-    day10::solve()
+    day11::solve()
 }
