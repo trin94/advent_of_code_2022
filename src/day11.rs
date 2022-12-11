@@ -7,14 +7,14 @@ use regex::Regex;
 use crate::files;
 
 struct Monkey {
-    id: i32,
-    items: VecDeque<i32>,
-    operation: Box<dyn Fn(i32) -> i32>,
-    divider: i32,
-    test_passed_throw_to_id: i32,
-    test_failed_throw_to_id: i32,
+    id: u64,
+    items: VecDeque<u64>,
+    operation: Box<dyn Fn(u64) -> u64>,
+    divider: u64,
+    test_passed_throw_to_id: u64,
+    test_failed_throw_to_id: u64,
 
-    inspect_counter: u32,
+    inspect_counter: u64,
 }
 
 impl fmt::Display for Monkey {
@@ -38,25 +38,25 @@ impl Monkey {
             let captures = RE.captures(string).unwrap();
             let monkey_id: &str = &captures["items"];
             monkey_id.split(",")
-                .map(|id| id.trim().parse::<i32>().unwrap())
-                .collect::<VecDeque<i32>>()
+                .map(|id| id.trim().parse::<u64>().unwrap())
+                .collect::<VecDeque<u64>>()
         };
-        let operation: Box<dyn Fn(i32) -> i32> = {
+        let operation: Box<dyn Fn(u64) -> u64> = {
             lazy_static! { static ref RE: Regex = Regex::new(r"Operation: new = old (?P<operation>[*+]) (?P<other>.*?)\n").unwrap(); }
             let captures = RE.captures(string).unwrap();
             let operation: &str = &captures["operation"];
             let other: &str = &captures["other"];
             match operation {
                 "+" => {
-                    let other = other.trim().parse::<i32>().unwrap();
-                    Box::new(move |x: i32| x + other)
+                    let other = other.trim().parse::<u64>().unwrap();
+                    Box::new(move |x: u64| x + other)
                 }
                 "*" => {
                     match other {
-                        "old" => Box::new(|x: i32| x * x),
+                        "old" => Box::new(|x: u64| x * x),
                         factor => {
-                            let other = factor.trim().parse::<i32>().unwrap();
-                            Box::new(move |old: i32| old * other)
+                            let other = factor.trim().parse::<u64>().unwrap();
+                            Box::new(move |old: u64| old * other)
                         }
                     }
                 }
@@ -67,31 +67,31 @@ impl Monkey {
             lazy_static! { static ref RE: Regex = Regex::new(r"Test: divisible by (?P<divider>.*?)\n").unwrap(); }
             let captures = RE.captures(string).unwrap();
             let divider: &str = &captures["divider"];
-            divider.trim().parse::<i32>().unwrap()
+            divider.trim().parse::<u64>().unwrap()
         };
         let test_passed_throw_to_id = {
             lazy_static! { static ref RE: Regex = Regex::new(r"If true: throw to monkey (?P<id>.*?)\n").unwrap(); }
             let captures = RE.captures(string).unwrap();
             let id: &str = &captures["id"];
-            id.trim().parse::<i32>().unwrap()
+            id.trim().parse::<u64>().unwrap()
         };
         let test_failed_throw_to_id = {
             lazy_static! { static ref RE: Regex = Regex::new(r"If false: throw to monkey (?P<id>.*?)$").unwrap(); }
             let captures = RE.captures(string).unwrap();
             let id: &str = &captures["id"];
-            id.trim().parse::<i32>().unwrap()
+            id.trim().parse::<u64>().unwrap()
         };
         let inspect_counter = 0;
         Monkey { id, items, operation, divider, test_passed_throw_to_id, test_failed_throw_to_id, inspect_counter }
     }
 
     /// Monkey inspects the item until he gets bored. Returns a tuple with new worry_level and receiver.
-    pub fn inspect(&mut self, item: i32, relief_factor: i32) -> (i32, i32) {
+    pub fn inspect(&mut self, item: u64, relief_factor: u64, lcm: &u64) -> (u64, u64) {
         self.inspect_counter += 1;
 
-        let worry_level = item;
-        let worry_level: i32 = (self.operation)(worry_level);
-        let worry_level: i32 = worry_level / relief_factor;
+        let worry_level: u64 = item % lcm;
+        let worry_level: u64 = (self.operation)(worry_level);
+        let worry_level: u64 = worry_level / relief_factor;
 
         if worry_level % self.divider == 0 {
             (worry_level, self.test_passed_throw_to_id)
@@ -109,19 +109,23 @@ pub fn solve() {
     let rounds = 20;
     calculate_monkey_business(&string, relief_factor, rounds);
 
-    // let relief_factor = 1;
-    // let rounds = 10000;
-    // calculate_monkey_business(&string, relief_factor, rounds);
+    let relief_factor = 1;
+    let rounds = 10000;
+    calculate_monkey_business(&string, relief_factor, rounds);
 }
 
-fn calculate_monkey_business(string: &String, relief_factor: i32, rounds: u32) {
+fn calculate_monkey_business(string: &String, relief_factor: u64, rounds: u64) {
     let monkeys = string.split("\n\n")
         .map(|line| Monkey::new_from(line))
         .map(|monkey| (monkey.id, monkey))
-        .collect::<Vec<(i32, Monkey)>>();
+        .collect::<Vec<(u64, Monkey)>>();
 
-    let mut circus: BTreeMap<i32, Monkey> = monkeys.into_iter().collect();
-    let keys = circus.keys().cloned().collect::<Vec<i32>>();
+    let prime_lcm: u64 = monkeys.iter()
+        .map(|it| it.1.divider)
+        .product();
+
+    let mut circus: BTreeMap<u64, Monkey> = monkeys.into_iter().collect();
+    let keys = circus.keys().cloned().collect::<Vec<u64>>();
 
     for _ in 0..rounds {
         for key in keys.iter() {
@@ -130,7 +134,7 @@ fn calculate_monkey_business(string: &String, relief_factor: i32, rounds: u32) {
             monkey.items.clear();
             while let Some(current_item) = items.pop_front() {
                 let monkey = circus.get_mut(&key).unwrap();
-                let (new_item, next_owner) = monkey.inspect(current_item, relief_factor);
+                let (new_item, next_owner) = monkey.inspect(current_item, relief_factor, &prime_lcm);
                 let next_owner = circus.get_mut(&next_owner).unwrap();
                 next_owner.items.push_back(new_item);
             }
@@ -139,13 +143,14 @@ fn calculate_monkey_business(string: &String, relief_factor: i32, rounds: u32) {
 
     let mut inspect_counters = circus.values()
         .map(|monkey| monkey.inspect_counter)
-        .collect::<Vec<u32>>();
+        .collect::<Vec<u64>>();
+
     inspect_counters.sort();
 
-    let monkey_business = inspect_counters.iter()
+    let monkey_business: u64 = inspect_counters.iter()
         .rev()
         .take(2)
-        .fold(1, |acc, factor| acc * factor);
+        .product();
 
     println!("Monkey Business {}", monkey_business);
 }
