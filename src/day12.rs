@@ -61,61 +61,52 @@ impl Map {
         self.elements.get(index)
     }
 
-    fn item_left_of(&self, position: &Item) -> Option<&Item> {
-        if position.column == 0 {
+    fn item_left_of(&self, item: &Item) -> Option<&Item> {
+        if item.column == 0 {
             None
         } else {
-            self.item(position.column - 1, position.row)
+            self.item(item.column - 1, item.row)
         }
     }
 
-    fn item_right_of(&self, position: &Item) -> Option<&Item> {
-        if position.column >= self.width {
+    fn item_right_of(&self, item: &Item) -> Option<&Item> {
+        if item.column >= self.width {
             None
         } else {
-            self.item(position.column + 1, position.row)
+            self.item(item.column + 1, item.row)
         }
     }
 
-    fn item_above(&self, position: &Item) -> Option<&Item> {
-        if position.row == 0 {
+    fn item_above(&self, item: &Item) -> Option<&Item> {
+        if item.row == 0 {
             None
         } else {
-            self.item(position.column, position.row - 1)
+            self.item(item.column, item.row - 1)
         }
     }
 
-    fn item_below(&self, position: &Item) -> Option<&Item> {
-        if position.row >= self.height {
+    fn item_below(&self, item: &Item) -> Option<&Item> {
+        if item.row >= self.height {
             None
         } else {
-            self.item(position.column, position.row + 1)
+            self.item(item.column, item.row + 1)
         }
     }
 
-    pub fn item_neighbours_of(&self, position: &Item) -> Vec<&Item> {
+    pub fn item_neighbours_of(&self, item: &Item) -> Vec<&Item> {
         let neighbours = [
-            self.item_left_of(position),
-            self.item_right_of(position),
-            self.item_above(position),
-            self.item_below(position),
+            self.item_left_of(item), self.item_right_of(item),
+            self.item_above(item), self.item_below(item),
         ];
-        let mut neighbours = neighbours.iter()
-            .filter_map(|item| *item)
-            .collect::<Vec<&Item>>();
-        neighbours.sort_by(|this, that| that.elevation().cmp(&this.elevation()));
-        neighbours
+        neighbours.iter().filter_map(|item| *item).collect::<Vec<&Item>>()
     }
 
     pub fn find(&self, char: char) -> Option<&Item> {
-        self.elements.iter()
-            .find(|pos| pos.character == char)
+        self.elements.iter().find(|item| item.character == char)
     }
 
     pub fn find_all(&self, char: char) -> Vec<&Item> {
-        self.elements.iter()
-            .filter(|pos| pos.character == char)
-            .collect::<Vec<&Item>>()
+        self.elements.iter().filter(|item| item.character == char).collect::<Vec<&Item>>()
     }
 }
 
@@ -130,11 +121,8 @@ pub fn solve() {
     let min_distance_start = climb_hill(&map, start, end);
     println!("Part 1: {}", min_distance_start);
 
-    let min_distance_any_a = map.find_all('a')
-        .iter()
-        .map(|start| climb_hill(&map, start, end))
-        .min()
-        .unwrap();
+    let min_distance_any_a = map.find_all('a').iter()
+        .map(|start| climb_hill(&map, start, end)).min().unwrap();
 
     println!("Part 2: {}", min_distance_any_a);
 }
