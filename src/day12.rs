@@ -1,6 +1,4 @@
 use std::collections::{HashSet, VecDeque};
-use std::ffi::c_uint;
-use std::thread::current;
 
 use crate::files;
 
@@ -49,9 +47,9 @@ impl Item {
     }
 
     pub fn can_visit(&self, other: &Item) -> bool {
-        let my = self.elevation() as i32;
-        let their = other.elevation() as i32;
-        their - my <= 1
+        let mine = self.elevation() as i32;
+        let theirs = other.elevation() as i32;
+        theirs - mine <= 1
     }
 }
 
@@ -82,10 +80,6 @@ impl Map {
 
     pub fn item(&self, column: usize, row: usize) -> Option<&Item> {
         let index: usize = column + row * self.width;
-        self.elements.get(index)
-    }
-
-    pub fn item_at(&self, index: usize) -> Option<&Item> {
         self.elements.get(index)
     }
 
@@ -136,7 +130,14 @@ impl Map {
     }
 
     pub fn find(&self, char: char) -> Option<&Item> {
-        self.elements.iter().find(|pos| pos.character == char)
+        self.elements.iter()
+            .find(|pos| pos.character == char)
+    }
+
+    pub fn find_all(&self, char: char) -> Vec<&Item> {
+        self.elements.iter()
+            .filter(|pos| pos.character == char)
+            .collect::<Vec<&Item>>()
     }
 
     pub fn index(&self, item: &Item) -> usize {
@@ -149,12 +150,24 @@ pub fn solve() {
     let string = files::parse_string_from(file).unwrap();
 
     let map = Map::from(&string);
-    part_1(&map);
-}
-
-fn part_1(map: &Map) {
     let start = map.find('S').unwrap();
     let end = map.find('E').unwrap();
+
+    let min_distance_start = climb_hill(&map, start, end);
+    println!("Part 1: {}", min_distance_start);
+
+    let min_distance_any_a = map.find_all('a')
+        .iter()
+        .map(|start| climb_hill(&map, start, end))
+        .min()
+        .unwrap();
+
+    println!("Part 2: {}", min_distance_any_a);
+}
+
+
+fn climb_hill(map: &Map, start: &Item, end: &Item) -> usize {
+    let mut min_distance = usize::MAX;
 
     let mut visited: HashSet<&Item> = HashSet::new();
     let mut next: VecDeque<(u32, &Item)> = VecDeque::new();
@@ -164,8 +177,7 @@ fn part_1(map: &Map) {
         let (distance, current) = next.pop_front().unwrap();
 
         if current == end {
-            println!("Part 1: {}", distance);
-            break;
+            min_distance = distance as usize;
         }
 
         for neighbor in map.item_neighbours_of(current) {
@@ -180,4 +192,5 @@ fn part_1(map: &Map) {
         }
     }
 
+    min_distance
 }
