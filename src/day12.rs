@@ -1,4 +1,5 @@
 use std::collections::{HashSet, VecDeque};
+use std::ffi::c_uint;
 
 use crate::files;
 
@@ -15,35 +16,12 @@ impl Item {
     }
 
     pub fn elevation(&self) -> usize {
-        match self.character {
-            'a' | 'S' => 0,
-            'b' => 1,
-            'c' => 2,
-            'd' => 3,
-            'e' => 4,
-            'f' => 5,
-            'g' => 6,
-            'h' => 7,
-            'i' => 8,
-            'j' => 9,
-            'k' => 10,
-            'l' => 11,
-            'm' => 12,
-            'n' => 13,
-            'o' => 14,
-            'p' => 15,
-            'q' => 16,
-            'r' => 17,
-            's' => 18,
-            't' => 19,
-            'u' => 20,
-            'v' => 21,
-            'w' => 22,
-            'x' => 23,
-            'y' => 24,
-            'z' | 'E' => 25,
-            _ => panic!()
-        }
+        let character = match self.character {
+            'S' => 'a',
+            'E' => 'z',
+            c => c,
+        };
+        (character as c_uint - 'a' as c_uint) as usize
     }
 
     pub fn can_visit(&self, other: &Item) -> bool {
@@ -71,8 +49,8 @@ impl Map {
             for column in 0..width {
                 let index: usize = column + row * width;
                 let char = string.as_bytes()[index] as char;
-                let position = Item::new(char, column, row);
-                elements.push(position);
+                let item = Item::new(char, column, row);
+                elements.push(item);
             }
         }
         Map { width, height, elements }
@@ -139,7 +117,6 @@ impl Map {
             .filter(|pos| pos.character == char)
             .collect::<Vec<&Item>>()
     }
-
 }
 
 pub fn solve() {
