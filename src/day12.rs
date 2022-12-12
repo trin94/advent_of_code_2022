@@ -78,12 +78,12 @@ impl Map {
         Map { width, height, elements }
     }
 
-    pub fn item(&self, column: usize, row: usize) -> Option<&Item> {
+    fn item(&self, column: usize, row: usize) -> Option<&Item> {
         let index: usize = column + row * self.width;
         self.elements.get(index)
     }
 
-    pub fn item_left_of(&self, position: &Item) -> Option<&Item> {
+    fn item_left_of(&self, position: &Item) -> Option<&Item> {
         if position.column == 0 {
             None
         } else {
@@ -91,7 +91,7 @@ impl Map {
         }
     }
 
-    pub fn item_right_of(&self, position: &Item) -> Option<&Item> {
+    fn item_right_of(&self, position: &Item) -> Option<&Item> {
         if position.column >= self.width {
             None
         } else {
@@ -99,7 +99,7 @@ impl Map {
         }
     }
 
-    pub fn item_above(&self, position: &Item) -> Option<&Item> {
+    fn item_above(&self, position: &Item) -> Option<&Item> {
         if position.row == 0 {
             None
         } else {
@@ -107,7 +107,7 @@ impl Map {
         }
     }
 
-    pub fn item_below(&self, position: &Item) -> Option<&Item> {
+    fn item_below(&self, position: &Item) -> Option<&Item> {
         if position.row >= self.height {
             None
         } else {
@@ -140,9 +140,6 @@ impl Map {
             .collect::<Vec<&Item>>()
     }
 
-    pub fn index(&self, item: &Item) -> usize {
-        item.column + item.row * self.width
-    }
 }
 
 pub fn solve() {
