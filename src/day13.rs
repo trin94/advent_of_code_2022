@@ -1,4 +1,5 @@
 use std::cmp;
+use std::cmp::Ordering;
 use std::collections::VecDeque;
 
 use crate::files;
@@ -6,13 +7,18 @@ use crate::files;
 const RADIX: u32 = 10;
 
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Eq, PartialEq)]
 enum Value {
     INT(u32),
     LIST(Vec<Value>),
 }
 
 impl Value {
+    pub fn from(string: &str) -> Self {
+        let mut parser = ValueParser::from(string);
+        parser.parse()
+    }
+
     fn compare(left: &Value, right: &Value) -> Option<bool> {
         match left {
             Value::INT(left) => match right {
@@ -65,6 +71,24 @@ impl Value {
     }
 }
 
+impl PartialOrd<Self> for Value {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
+impl Ord for Value {
+    fn cmp(&self, other: &Self) -> Ordering {
+        match Value::compare(self, other) {
+            None => Ordering::Equal,
+            Some(result) => match result {
+                true => Ordering::Less,
+                false => Ordering::Greater
+            }
+        }
+    }
+}
+
 
 struct ValuePair {
     left: Value,
@@ -74,9 +98,10 @@ struct ValuePair {
 impl ValuePair {
     pub fn from(string: &str) -> Self {
         let mut split = string.splitn(2, "\n");
-        let mut left = ValueParser::new_from(split.next().unwrap());
-        let mut right = ValueParser::new_from(split.next().unwrap());
-        Self { left: left.parse(), right: right.parse() }
+        Self {
+            left: Value::from(split.next().unwrap()),
+            right: Value::from(split.next().unwrap()),
+        }
     }
 
     pub fn is_ordered(&self) -> bool {
@@ -91,7 +116,7 @@ struct ValueParser {
 }
 
 impl ValueParser {
-    pub fn new_from(string: &str) -> Self {
+    pub fn from(string: &str) -> Self {
         Self { characters: string.chars().collect::<VecDeque<char>>(), consumed: 0 }
     }
 
@@ -153,19 +178,43 @@ pub fn solve() {
     let string = files::parse_string_from(file).unwrap();
 
     part_1(&string);
+    part_2(&string);
 }
 
 fn part_1(string: &String) {
     let value_pairs = string
         .trim()
         .split("\n\n")
-        .map(|string| ValuePair::from(string))
+        .map(|double_line| ValuePair::from(double_line))
         .collect::<Vec<ValuePair>>();
+
     let mut index_sum = 0;
+
     for (index, value_pair) in value_pairs.iter().enumerate() {
         if value_pair.is_ordered() {
             index_sum += index + 1;
         }
     }
-    dbg!(index_sum);
+
+    println!("Sum of indices: {}", index_sum)
+}
+
+fn part_2(string: &String) {
+    let mut values = string.trim()
+        .split("\n")
+        .filter(|line| !line.trim().is_empty())
+        .map(|line| Value::from(line))
+        .collect::<Vec<Value>>();
+
+    let marker_1 = Value::from("[[2]]");
+    let marker_2 = Value::from("[[6]]");
+    let markers = vec![marker_1.clone(), marker_2.clone()];
+
+    values.extend(markers);
+    values.sort();
+
+    let idx_marker_1 = values.iter().position(|r| r == &marker_1).unwrap() + 1;
+    let idx_marker_2 = values.iter().position(|r| r == &marker_2).unwrap() + 1;
+
+    println!("Decoder key: {}", idx_marker_1 * idx_marker_2)
 }
