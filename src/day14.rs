@@ -169,6 +169,7 @@ fn construct_cave(width: usize, height: usize) -> Cave {
 
 pub fn solve() {
     solve_part1();
+    solve_part2();
 }
 
 fn solve_part1() {
@@ -177,4 +178,20 @@ fn solve_part1() {
 
     while cave.drop_sand_at(sand_entry) {};
     println!("Part 1: Consumed {} Sand", cave.sand_consumed)
+}
+
+fn solve_part2() {
+    let sand_entry = Coordinate::new(500, 0);
+
+    let width = 5000;
+    let height = 5000;
+    let mut cave = construct_cave(width, height);
+
+    let deepest_rock = cave.deepest_rock;
+    let c1 = Coordinate::new(0, deepest_rock + 2);
+    let c2 = Coordinate::new(width, deepest_rock + 2);
+    cave.put_rocks_between(c1, c2);
+
+    while cave.drop_sand_at(sand_entry) {};
+    println!("Part 2: Consumed {} Sand", cave.sand_consumed)
 }
