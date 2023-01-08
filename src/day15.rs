@@ -1,4 +1,8 @@
+use std::cmp;
 use std::collections::HashSet;
+use std::ops::RangeInclusive;
+
+use itertools::Itertools;
 
 use crate::files;
 
@@ -42,20 +46,21 @@ impl Deployment {
         (p1.x - p2.x).abs() + (p1.y - p2.y).abs()
     }
 
-    pub fn covered_points_in(&self, line: &i32, min: &i32, max: &i32) -> Vec<i32> {
+    pub fn covered_points_in(&self, line: &i32, min: &i32, max: &i32) -> RangeInclusive<i32> {
         let sensor = self.sensor_location;
         let sensor_beacon_distance = self.sensor_beacon_distance();
         let delta_vertical = (sensor.y - line).abs();
         let delta_horizontal = sensor_beacon_distance - delta_vertical;
         let start = *cmp::max(min, &(sensor.x - delta_horizontal));
         let end = *cmp::min(max, &(sensor.x + delta_horizontal));
-        (start..=end).collect()
+        start..=end
     }
 }
 
 
 pub fn solve() {
-    solve_part1()
+    solve_part1();
+    solve_part2();
 }
 
 
@@ -73,7 +78,7 @@ fn solve_part1() {
 
     let mut covered_xs_in_requested_line = deployments.iter()
         .filter(|deployment| deployment.covers(requested_line))
-        .flat_map(|deployment| deployment.covered_points_in(&requested_line, &min, &max))
+        .flat_map(|deployment| deployment.covered_points_in(&requested_line, &min, &max).collect::<Vec<i32>>())
         .collect::<HashSet<i32>>();
 
     for deployment in deployments {
@@ -86,4 +91,58 @@ fn solve_part1() {
     }
 
     println!("Part 1: {}", covered_xs_in_requested_line.len())
+}
+
+
+fn solve_part2() {
+    let file = "resources/day15.txt";
+    let lines = files::parse_lines_from(file);
+
+    let min = 0;
+    let max = 4_000_000;
+
+    let deployments = lines
+        .iter()
+        .map(|line| Deployment::from_str(line))
+        .collect::<Vec<Deployment>>();
+
+    let mut yy: i64 = 0;
+    let mut xx: i64 = 0;
+
+    'scan: for y in min..=max {
+        let mut ranges: HashSet<RangeInclusive<i32>> = HashSet::new();
+        for deployment in &deployments {
+            if deployment.covers(y) {
+                let range = deployment.covered_points_in(&y, &min, &max);
+                ranges.insert(range);
+            }
+        }
+
+        // Remove all ranges that are part of another range
+        let ranges_copy = ranges.clone();
+        for r1 in &ranges_copy {
+            for r2 in &ranges_copy {
+                if r1 != r2 && r1.start() >= r2.start() && r1.end() <= r2.end() {
+                    ranges.remove(r1);
+                }
+            }
+        }
+
+        // sort
+        let ranges: Vec<_> = ranges.iter()
+            .sorted_by(|a, b| Ord::cmp(&a.start(), &b.start()))
+            .collect();
+
+        // Find the ranges that are not 'connected'
+        for (r1, r2) in ranges.iter().tuple_windows() {
+            if r2.start() - r1.end() > 1 {
+                yy = y as i64;
+                xx = (r1.end() + 1) as i64;
+                break 'scan;
+            }
+        }
+    }
+
+    let frequency = xx * 4_000_000 + yy;
+    println!("Part 2: {} at ({xx}|{yy})", frequency)
 }
