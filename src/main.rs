@@ -1,8 +1,8 @@
 extern crate core;
 
 mod files;
-mod day14;
+mod day15;
 
 fn main() {
-    day14::solve()
+    day15::solve()
 }
